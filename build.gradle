@@ -1,0 +1,80 @@
+apply plugin: 'application'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+
+applicationName = 'ReceiveEMF'
+sourceCompatibility = 1.8
+version = '0.0.1'
+mainClassName = 'iox.hla.ii.ReceiveMain'
+archivesBaseName = applicationName
+group 'iox.hla'
+version = '0.0.1'
+
+def jarFile = buildDir.name + "/libs/" + applicationName + "-" + version + ".jar"
+configure(install.repositories.mavenInstaller) {
+    pom.project {
+        groupId group
+        artifactId applicationName
+        inceptionYear '2017'
+        packaging 'jar'
+    }
+}
+
+clean {
+    delete "${buildDir}" 
+    delete "${applicationName}" 
+}
+
+repositories {
+    maven {url 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath;}
+    jcenter()
+}
+ 
+dependencies {
+    compile project (':federate-core')
+    compile project (':pubsub-federate')
+    compile project (':e2a2e')
+    compile project (':accumulo-provider')
+    compile project (':LittleEMF')
+    compile 'iox.emf:fom2emf:0.0.1'
+    compile 'iox.emf:sds4emf:0.0.1'
+    
+    compile 'commons-io:commons-io:2.5'
+    compile 'org.apache.logging.log4j:log4j-core:2.9.0'
+    compile 'org.apache.logging.log4j:log4j-api:2.9.0'
+    compile 'com.lmax:disruptor:3.3.6'
+    compile 'org.porticoproject:portico:2.1.0'
+    compile 'org.apache.accumulo:accumulo-core:1.8.1'
+    testCompile 'junit:junit:4.+'
+}
+
+task assemblex {
+    dependsOn jar
+    inputs.file jarFile
+    outputs.dir applicationName
+   doLast{ 
+      copy {
+            from "${buildDir}/libs"
+            into "${applicationName}"
+            fileMode = 0777
+        }
+       copy {
+            from "conf/"
+            into "${applicationName}/conf"
+        }
+       copy {
+            from configurations.runtime
+            into "$applicationName/lib"
+        }
+   }
+}
+
+jar {
+    // Keep jar clean:
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/*.MF'
+    manifest {
+        attributes ('Main-Class': mainClassName,
+                   'Class-Path': ' lib/' + configurations.runtime.collect { it.getName() }.join(' lib/'))
+    }
+}

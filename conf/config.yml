@@ -1,0 +1,5 @@
+federateName: ReceiveMain
+federation: FedManager
+fomFile: conf/little.xml
+lookahead: 0.1
+stepsize: 1.0 
